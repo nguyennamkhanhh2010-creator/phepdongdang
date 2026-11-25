@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mô hình cầu tối ưu AM + MN + NB</title>
+<style>
+*{box-sizing:border-box}body{font:16px system-ui,Arial;margin:0;background:#f4f7fb;color:#172033}.wrap{max-width:1000px;margin:auto;padding:20px}.card{background:white;border:1px solid #dce3ee;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 3px 12px #1527440b}h1{font-size:24px;margin:0 0 8px}.muted{color:#5b667a;font-size:14px}svg{width:100%;height:auto;touch-action:none;background:#fbfdff;border-radius:12px}.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.ctrl label{display:flex;justify-content:space-between;font-weight:600;font-size:14px}.ctrl input{width:100%}.result{background:#edf8f0;border-radius:12px;padding:14px}.result strong{font-size:20px;color:#13743b}.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}button{padding:9px 13px;border:1px solid #cbd5e1;border-radius:9px;background:white;font-weight:600}
+</style></head><body><div class="wrap">
+<div class="card"><h1>Mô hình tương tác: Tối ưu AM + MN + NB</h1><div class="muted">Kéo trực tiếp A, B trên hình hoặc dùng thanh trượt. Hai làng A, B nằm cùng phía bờ sông. Cầu MN vuông góc bờ sông và có chiều rộng cố định.</div></div>
+<div class="card"><svg id="plot" viewBox="0 0 800 500" aria-label="Mô hình hình học tương tác"></svg><div class="legend"><span><i class="dot" style="background:#2563eb"></i>Đường đi AM, MN, NB</span><span><i class="dot" style="background:#16a34a"></i>Đường biến hình</span><span><i class="dot" style="background:#e87924"></i>Cầu MN</span><span><i class="dot" style="background:#9333ea"></i>Điểm B' sau tịnh tiến</span></div></div>
+<div class="card"><h3>Điều chỉnh vị trí</h3><div class="controls" id="controls"></div><p><button id="reset">Đặt lại</button></p></div>
+<div class="card result" id="result"></div>
+<div class="card muted"><b>Giải thích phép biến hình:</b><br>1. Tịnh tiến B theo vectơ NM để được B', khi đó NB = MB'.<br>2. Bài toán trở thành tìm M trên bờ sông sao cho AM + MB' nhỏ nhất (MN có độ dài cố định).<br>3. Lấy B'' đối xứng B' qua bờ sông. Khi đó MB' = MB'', và AM + MB'' nhỏ nhất khi A, M, B'' thẳng hàng.<br><br><b>Lưu ý:</b> Đây là mô hình toán học theo đúng biểu thức AM + MN + NB và giả thiết A, B cùng phía. Cần hỏi giáo viên cách diễn giải tuyến đường thực tế của đoạn NB nếu đề yêu cầu mô tả cây cầu ngoài đời.</div>
+</div>
+<script>
+const svg=document.getElementById('plot');let s={ax:2.5,ay:4,bx:14,by:3.5,w:2.5};const L=55,scale=42,bankY=265;
+const X=x=>L+x*scale, Y=y=>bankY-y*scale;
+function calc(){let yp=s.by+s.w;let mx=(s.ax*yp+s.bx*s.ay)/(s.ay+yp);return {mx,yp,bpx:s.bx,bpy:yp};}
+function line(x1,y1,x2,y2,color,width=3,dash=''){return `<line x1="${X(x1)}" y1="${Y(y1)}" x2="${X(x2)}" y2="${Y(y2)}" stroke="${color}" stroke-width="${width}" ${dash?`stroke-dasharray="${dash}"`:''}/>`}
+function point(x,y,name,color,offset=[10,-10],draggable=false){return `<circle ${draggable?`data-point="${name}"`:''} cx="${X(x)}" cy="${Y(y)}" r="8" fill="${color}" stroke="white" stroke-width="2"/><text x="${X(x)+offset[0]}" y="${Y(y)+offset[1]}" font-size="17" font-weight="700" fill="${color}">${name}</text>`}
+function render(){let {mx,yp}=calc(),nY=-s.w;let bpx=s.bx,bpy=yp;let b2y=-yp;
+let parts=[`<rect x="0" y="0" width="800" height="265" fill="#eff8ef"/><rect x="0" y="265" width="800" height="105" fill="#b9e6fa"/><rect x="0" y="370" width="800" height="130" fill="#eff8ef"/>`, `<line x1="0" y1="265" x2="800" y2="265" stroke="#475569" stroke-width="3"/><line x1="0" y1="370" x2="800" y2="370" stroke="#475569" stroke-width="3"/><text x="12" y="250" fill="#334155" font-size="14">Bờ sông d</text><text x="12" y="390" fill="#334155" font-size="14">Bờ đối diện</text><text x="690" y="325" fill="#0369a1" font-size="16">SÔNG</text>`];
+// actual path A-M-N-B
+parts.push(line(s.ax,s.ay,mx,0,'#2563eb',3),line(mx,0,mx,nY,'#e87924',7),line(mx,nY,s.bx,s.by,'#2563eb',3));
+// translation and reflection construction
+parts.push(line(s.ax,s.ay,bpx,bpy,'#16a34a',2,'7 6'),line(s.ax,s.ay,s.bx,b2y,'#9333ea',2,'5 5'),line(s.bx,bpy,s.bx,b2y,'#9333ea',1.5,'4 5'));
+parts.push(point(s.ax,s.ay,'A','#2563eb',[-22,-12],true),point(s.bx,s.by,'B','#2563eb',[10,20],true),point(mx,0,'M','#16a34a',[-22,-13]),point(mx,nY,'N','#e87924',[-22,22]),point(bpx,bpy,"B'",'#9333ea',[10,-10]),point(s.bx,b2y,"B''",'#9333ea',[10,18]));
+parts.push(`<text x="${X(mx)+12}" y="${Y(-s.w/2)}" font-size="13" fill="#b45309">MN = ${s.w.toFixed(1)}</text>`);svg.innerHTML=parts.join('');
+let AM=Math.hypot(mx-s.ax,s.ay),NB=Math.hypot(s.bx-mx,s.by+s.w),total=AM+s.w+NB;
+document.getElementById('result').innerHTML=`<b>Kết quả tối ưu</b><br><strong>M = (${mx.toFixed(3)}; 0) &nbsp; N = (${mx.toFixed(3)}; -${s.w.toFixed(2)})</strong><br>AM = ${AM.toFixed(3)} &nbsp; MN = ${s.w.toFixed(3)} &nbsp; NB = ${NB.toFixed(3)}<br><b>Tổng nhỏ nhất AM + MN + NB = ${total.toFixed(3)}</b><br><span class="muted">B' = (${bpx.toFixed(2)}; ${bpy.toFixed(2)}), B'' = (${bpx.toFixed(2)}; -${bpy.toFixed(2)})</span>`;
+}
+const defs=[['ax','Hoành độ A',0,5,.1],['ay','Khoảng cách A đến bờ',1,6,.1],['bx','Hoành độ B',8,17,.1],['by','Khoảng cách B đến bờ',1,6,.1],['w','Chiều rộng sông MN',1,4,.1]];
+function controls(){document.getElementById('controls').innerHTML=defs.map(([k,label,min,max,step])=>`<div class="ctrl"><label for="${k}"><span>${label}</span><span id="v_${k}">${s[k].toFixed(1)}</span></label><input id="${k}" type="range" min="${min}" max="${max}" step="${step}" value="${s[k]}"></div>`).join('');defs.forEach(([k])=>document.getElementById(k).addEventListener('input',e=>{s[k]=+e.target.value;document.getElementById('v_'+k).textContent=s[k].toFixed(1);render()}));}
+function fromEvent(e){let r=svg.getBoundingClientRect(),vx=(e.clientX-r.left)*800/r.width,vy=(e.clientY-r.top)*500/r.height;return {x:(vx-L)/scale,y:(bankY-vy)/scale}}
+let drag=null;svg.addEventListener('pointerdown',e=>{let p=e.target.closest('[data-point]');if(p){drag=p.getAttribute('data-point');svg.setPointerCapture(e.pointerId)}});svg.addEventListener('pointermove',e=>{if(!drag)return;let p=fromEvent(e);if(drag==='A'){s.ax=Math.max(0,Math.min(5,p.x));s.ay=Math.max(1,Math.min(6,p.y))}if(drag==='B'){s.bx=Math.max(8,Math.min(17,p.x));s.by=Math.max(1,Math.min(6,p.y))}controls();render()});svg.addEventListener('pointerup',()=>drag=null);
+document.getElementById('reset').onclick=()=>{s={ax:2.5,ay:4,bx:14,by:3.5,w:2.5};controls();render()};controls();render();
+</script></body></html>
